@@ -1,4 +1,3 @@
-
 // Stores a list of todo
 let todos = [];
 
@@ -42,16 +41,40 @@ function saveTodo() {
     }
 }
 
-// Todo : edit
+// Todo : Edit
 function editTodo(index) {
-    const newTodoText = prompt('Enter new todo text');
-    if (newTodoText !== null) {
-        todos[index] = newTodoText;
-        renderTodos();
-        playSuccessSound();
-        showToast(`Todo updated ${todos} successfully`, `success`);
-    }
+    const todoText = todos[index];
+    const editTodoText = document.getElementById("edit-todo-text");
+    const editPopupTitle = document.getElementById("edit-popup-title");
+    const editPopup = document.getElementById("editPopup");
+
+    // Hiển thị popup và điền giá trị cũ vào input
+    editPopup.style.display = "block";
+    editTodoText.value = todoText;
+    editPopupTitle.textContent = "Edit Todo";
+
+    // Xử lý sự kiện khi bấm Save
+    saveEditedTodo = function () {
+        const newTodoText = editTodoText.value.trim();
+        if (newTodoText !== '') {
+            todos[index] = newTodoText;
+            renderTodos();
+            closeEditPopup();
+            playSuccessSound();
+            showToast(`Todo updated ${todos} successfully`, `success`);
+        } else {
+            playErrorSound();
+            showToast('Todo text cannot be empty', 'error');
+        }
+    };
 }
+
+// Đóng popup khi sửa xong
+function closeEditPopup() {
+    const editPopup = document.getElementById("editPopup");
+    editPopup.style.display = "none";
+}
+
 
 // Todo : delete
 function deleteTodo(index) {
