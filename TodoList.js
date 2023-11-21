@@ -1,123 +1,139 @@
-// Stores a list of todo
-let todos = [];
+const TOAST_TYPES = {
+    success: "success",
+    error: "error",
+};
 
-// Get the todo list from local storage if available
-if (localStorage.getItem('todos')) {
-    todos = JSON.parse(localStorage.getItem('todos'));
-    renderTodos();
+const TIME = {
+    _3_SECOND: 3 * 1000
 }
 
-// Todo : show list
-function renderTodos() {
-    const todoList = document.getElementById('todo-list');
-    todoList.innerHTML = '';
+const STATUS = {
+    _ADD: "add",
+    _EDIT: "edit",
+    _ADD_NUM: -1,
+};
+
+const todos = [];
+let currentEditIndex = STATUS._ADD_NUM;
+
+const toastSoundSuccess = document.getElementById("toastSoundSuccess");
+const toastSoundError = document.getElementById("toastSoundError");
+
+const renderTodoList = () => {
+    const todoList = document.getElementById("todo-list");
+    todoList.innerHTML = "";
     todos.forEach((todo, index) => {
-        const todoItem = document.createElement('li');
-        todoItem.className = 'todo-item';
-        todoItem.innerHTML = `
+        const listItem = document.createElement("li");
+        listItem.className = "todo-item";
+        listItem.innerHTML = `
       <span>${todo}</span>
       <div>
-       <button class="btn btn-primary" onclick="editTodo(${index})">Edit</button>
-        <button class="btn btn-danger" onclick="deleteTodo(${index})">Delete</button>
+          <button class="btn btn-primary" onclick="openPopup('edit', ${index})">Edit</button>
+          <button class="btn btn-danger" onclick="deleteTodo(${index})">Delete</button>
       </div>
-    `;
-        todoList.appendChild(todoItem);
+      `;
+        todoList.appendChild(listItem);
     });
-    localStorage.setItem('todos', JSON.stringify(todos));
-}
+};
 
-//  Todo : Add
-function saveTodo() {
-    const todoText = document.getElementById('todo-text').value;
-    if (todoText.trim() !== '') {
-        todos.push(todoText);
-        renderTodos();
-        closePopup();
-        playSuccessSound();
-        showToast(`Todo added ${todos} successfully`, `success`);
+const openPopup = (action = STATUS._ADD, index = STATUS._ADD_NUM) => {
+    const popup = document.getElementById("popup");
+    const popupTitle = document.getElementById("popup-title");
+    const todoText = document.getElementById("todo-text");
+
+    if (action === STATUS._ADD) {
+        popupTitle.innerText = "Add Todo";
+        todoText.value = "";
+        currentEditIndex = STATUS._ADD_NUM;
     } else {
-        playErrorSound();
-        showToast('Todo text cannot be empty', 'error');
+        popupTitle.innerText = "Edit Todo";
+        todoText.value = todos[index];
+        currentEditIndex = index;
     }
-}
 
-// Todo : Edit
-function editTodo(index) {
-    const todoText = todos[index];
-    const editTodoText = document.getElementById("edit-todo-text");
-    const editPopupTitle = document.getElementById("edit-popup-title");
-    const editPopup = document.getElementById("editPopup");
+    popup.style.display = "flex";
+};
 
-    // Hiển thị popup và điền giá trị cũ vào input
-    editPopup.style.display = "block";
-    editTodoText.value = todoText;
-    editPopupTitle.textContent = "Edit Todo";
+const closePopup = () => {
+    const popup = document.getElementById("popup");
 
-    // Xử lý sự kiện khi bấm Save
-    saveEditedTodo = function () {
-        const newTodoText = editTodoText.value.trim();
-        if (newTodoText !== '') {
-            todos[index] = newTodoText;
-            renderTodos();
-            closeEditPopup();
-            playSuccessSound();
-            showToast(`Todo updated ${todos} successfully`, `success`);
-        } else {
-            playErrorSound();
-            showToast('Todo text cannot be empty', 'error');
-        }
-    };
-}
+    popup.style.display = "none";
+};
 
-// Đóng popup khi sửa xong
-function closeEditPopup() {
-    const editPopup = document.getElementById("editPopup");
-    editPopup.style.display = "none";
-}
+const saveTodo = () => {
+    const todoText = document.getElementById("todo-text").value;
 
-
-// Todo : delete
-function deleteTodo(index) {
-    if (confirm('Are you sure you want to delete this todo?')) {
-        todos.splice(index, 1);
-        renderTodos();
-        playSuccessSound();
-        showToast(`Todo deleted ${todos} successfully`, `success`);
+    if (todoText === "") {
+        ToastError("Please enter input 🙃")
+        return toastSoundError.play();
     }
+
+    // Step 1: Add Todo
+    const handelCheckType = currentEditIndex !== STATUS._ADD_NUM
+    if (handelCheckType) {
+        return saveEdit(currentEditIndex)
+    }
+
+    todos.push(todoText);
+    ToastSuccess(`Add Todo success ✅`)
+
+    toastSoundSuccess.play();
+    closePopupAndRenderList()
+};
+
+const saveEdit = (currentEditIndex) => {
+    const todoText = document.getElementById("todo-text").value;
+
+    todos[currentEditIndex] = todoText
+    ToastSuccess(`Edit ${todoText} Success 😂`)
+    toastSoundSuccess.play();
+    closePopupAndRenderList()
 }
 
-// show toast message
-function showToast(message, type) {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.classList.add(type);
-    toast.style.display = 'block';
-
-    setTimeout(function () {
-        toast.style.display = 'none';
-        toast.classList.remove(type);
-    }, 2000);
-}
-// Open popup
-function openPopup(title) {
-    document.getElementById('popup-title').textContent = title + ' Todo';
-    document.getElementById('todo-text').value = '';
-    document.getElementById('popup').style.display = 'block';
+const closePopupAndRenderList = () => {
+    closePopup();
+    renderTodoList();
 }
 
-// Close popup
-function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-}
+const deleteTodo = (index) => {
+    todos.splice(index, 1);
+    toastSoundSuccess.play();
+    renderTodoList();
+};
 
-// Sound Success
-function playSuccessSound() {
-    const audio = document.getElementById('toastSoundSuccess');
-    audio.play();
-}
+const showToast = (message, type) => {
 
-// Sound Error
-function playErrorSound() {
-    const audio = document.getElementById('toastSoundError');
-    audio.play();
-}
+    const toast = document.getElementById("toast");
+
+    toast.innerText = message;
+
+    toast.className = "toast";
+
+    switch (type) {
+        case TOAST_TYPES.success:
+            toast.classList.add("success");
+            break;
+        case TOAST_TYPES.error:
+            toast.classList.add("error");
+            break;
+        default:
+            break;
+    }
+
+    toast.style.display = "block";
+
+    setTimeout(() => {
+        toast.style.display = "none";
+    }, TIME._3_SECOND);
+};
+
+const ToastError = (message) => {
+    showToast(message, TOAST_TYPES.error);
+};
+
+const ToastSuccess = (message) => {
+    showToast(message, TOAST_TYPES.success);
+};
+
+
+renderTodoList();
