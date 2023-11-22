@@ -115,7 +115,7 @@ const saveEdit = (currentEditIndex) => {
     const todoText = document.getElementById("todo-text").value;
 
     todos[currentEditIndex].text = todoText;
-    ToastSuccess(`Text old ${todos[currentEditIndex].text} changed to ${todoText}`);
+    ToastSuccess(`Change  ${todoText} successfully`);
     toastSoundSuccess.play();
     closePopupAndRenderList();
 
